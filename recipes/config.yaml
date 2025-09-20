@@ -1,0 +1,45 @@
+models:
+  nemo_model: pretrained_models/nemo_model_path
+  wav2vec2_v3: m3hrdadfi/wav2vec2-large-xlsr-persian-v3
+  whisper_large: pretrained_models/whisper_large_dir
+  whisper_processor: openai/whisper-large
+  faster_whisper_large: pretrained_models/faster_whisper_dir
+  pos_tagger: pretrained_models/pos_tagger.model
+
+lang_id: fa
+offset: 0
+threshold: -2
+sample_rate: 16000
+cut_prefix: 0
+max_duration: 30
+edge_len: 7
+
+output_format: mp3
+batch_size: 16
+device: -1
+num_workers: 0
+
+cer_threshold: 40
+wer_threshold: 50
+cer_edge_threshold: 75
+len_diff_ratio_threshold: 0.4
+min_duration: 1
+
+long_wer_threshold: 80
+long_cer_threshold: 60
+
+remove_brackets: false
+remove_asterisks: false
+remove_parentheses: false
+remove_number_in_brackets: false
+remove_number_in_parentheses: false
+remove_number_in_curly_brackets: false
+remove_number_in_guillemets: false
+remove_speaker_labels: false
+split_using_pattern: true
+additional_split_symbols: '"!|?|؟|؛"'
+split_using_sat: false
+split_on_quotes: false
+split_on_verbs: false
+split_on_verbs_min_words: 10
+split_on_verbs_max_words: 30
