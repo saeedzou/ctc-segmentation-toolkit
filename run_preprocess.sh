@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # A script to preprocess audio and text data based on a YAML config.
-# Replicates modes 0 and 1 of the main Python pipeline script.
 
 # --- Configuration and Argument Parsing ---
 set -e # Exit immediately if a command exits with a non-zero status.

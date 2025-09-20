@@ -3,3 +3,4 @@ numpy<2.0.0
 wtpsplit
 yq
 git+https://github.com/NVIDIA/NeMo.git@main#egg=nemo_toolkit[asr]
+ctc_segmentation
