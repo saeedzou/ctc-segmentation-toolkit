@@ -123,7 +123,7 @@ def main():
     model = model.to(device)
 
     logging.info(f"Inference will be done on device: {device}")
-    transcribe_audio(model, processor, device, args.dataset_manifest, args.edge_len, args.dataset_manifest_transcribed)
+    transcribe_audio(model, processor, device, args.dataset_manifest, args.dataset_manifest_transcribed, args.edge_len)
 
 
 if __name__ == '__main__':
