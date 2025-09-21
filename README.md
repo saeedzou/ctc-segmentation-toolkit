@@ -107,7 +107,7 @@ python -m scripts.post_processing.merge_manifests --output_dir <root_dir>/output
 Then you can filter the merged manifest using the `filter_samples.py` script.
 
 ```bash
-python -m scripts.post_processing.filter_samples --config_path recipes/config.yaml --manifest_path <root_dir>/output/merged_manifest.json --output_dir <root_dir>/output
+python -m scripts.post_processing.filter_samples --config_path recipes/config.yaml --manifest_path <root_dir>/output/manifests/merged_manifest.json
 ```
 
 ### 5. Output
