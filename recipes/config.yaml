@@ -2,9 +2,14 @@ models:
   nemo_model: pretrained_models/nemo_model_path
   wav2vec2_v3: m3hrdadfi/wav2vec2-large-xlsr-persian-v3
   whisper_large: pretrained_models/whisper_large_dir
-  whisper_processor: openai/whisper-large
   faster_whisper_large: pretrained_models/faster_whisper_dir
   pos_tagger: pretrained_models/pos_tagger.model
+
+asr_modules:
+  nemo: true
+  wav2vec2: true
+  whisper: false
+  faster_whisper: false
 
 lang_id: fa
 offset: 0

@@ -53,57 +53,99 @@ NUM_WORKERS=$(get_config '.num_workers')
 NEMO_MODEL=$(get_config '.models.nemo_model')
 WAV2VEC2_MODEL=$(get_config '.models.wav2vec2_v3')
 FASTER_WHISPER_MODEL=$(get_config '.models.faster_whisper_large')
-WHISPER_PROCESSOR=$(get_config '.models.whisper_processor')
+
+# ASR module flags
+RUN_NEMO=$(get_config '.asr_modules.nemo')
+RUN_WAV2VEC2=$(get_config '.asr_modules.wav2vec2')
+RUN_WHISPER=$(get_config '.asr_modules.whisper')
+RUN_FASTER_WHISPER=$(get_config '.asr_modules.faster_whisper')
 
 
 # --- Step 5: Transcribe Speech using Nemo ---
-echo "----- [Step 5] Transcribing speech using Nemo -----"
-LOG_TRANSCRIBE_NEMO="${LOG_DIR}/transcribe_nemo.log"
-OUTPUT_MANIFEST_NEMO="${DATASET_MANIFEST/.json/_nemo.json}"
+if [ "$RUN_NEMO" = "true" ]; then
+    echo "----- [Step 5] Transcribing speech using Nemo -----"
+    LOG_TRANSCRIBE_NEMO="${LOG_DIR}/transcribe_nemo.log"
+    OUTPUT_MANIFEST_NEMO="${DATASET_MANIFEST/.json/_nemo.json}"
 
-python -m scripts.asr.transcribe_speech_nemo \
-    --model_path="${NEMO_MODEL}" \
-    --dataset_manifest="${DATASET_MANIFEST}" \
-    --dataset_manifest_transcribed="${OUTPUT_MANIFEST_NEMO}" \
-    --device="${DEVICE}" \
-    --edge_len="${EDGE_LEN}" \
-    --batch_size="${BATCH_SIZE}" > "${LOG_TRANSCRIBE_NEMO}" 2>&1
+    python -m scripts.asr.transcribe_speech_nemo \
+        --model_path="${NEMO_MODEL}" \
+        --dataset_manifest="${DATASET_MANIFEST}" \
+        --dataset_manifest_transcribed="${OUTPUT_MANIFEST_NEMO}" \
+        --device="${DEVICE}" \
+        --edge_len="${EDGE_LEN}" \
+        --batch_size="${BATCH_SIZE}" > "${LOG_TRANSCRIBE_NEMO}" 2>&1
 
-echo "Nemo transcription complete. Log saved to ${LOG_TRANSCRIBE_NEMO}"
-echo ""
+    echo "Nemo transcription complete. Log saved to ${LOG_TRANSCRIBE_NEMO}"
+    echo ""
+else
+    echo "----- [Step 5] Skipping Nemo transcription -----"
+    echo ""
+fi
 
 
 # --- Step 6: Transcribe Speech using Wav2Vec2 ---
-echo "----- [Step 6] Transcribing speech using Wav2Vec2 -----"
-LOG_TRANSCRIBE_WAV2VEC2="${LOG_DIR}/transcribe_wav2vec2_v3.log"
-OUTPUT_MANIFEST_WAV2VEC2="${DATASET_MANIFEST/.json/_wav2vec2_v3.json}"
+if [ "$RUN_WAV2VEC2" = "true" ]; then
+    echo "----- [Step 6] Transcribing speech using Wav2Vec2 -----"
+    LOG_TRANSCRIBE_WAV2VEC2="${LOG_DIR}/transcribe_wav2vec2_v3.log"
+    OUTPUT_MANIFEST_WAV2VEC2="${DATASET_MANIFEST/.json/_wav2vec2_v3.json}"
 
-python -m scripts.asr.transcribe_speech_wav2vec2 \
-    --model_path="${WAV2VEC2_MODEL}" \
-    --device="${DEVICE}" \
-    --edge_len="${EDGE_LEN}" \
-    --dataset_manifest="${DATASET_MANIFEST}" \
-    --dataset_manifest_transcribed="${OUTPUT_MANIFEST_WAV2VEC2}" > "${LOG_TRANSCRIBE_WAV2VEC2}" 2>&1
+    python -m scripts.asr.transcribe_speech_wav2vec2 \
+        --model_path="${WAV2VEC2_MODEL}" \
+        --device="${DEVICE}" \
+        --edge_len="${EDGE_LEN}" \
+        --dataset_manifest="${DATASET_MANIFEST}" \
+        --dataset_manifest_transcribed="${OUTPUT_MANIFEST_WAV2VEC2}" > "${LOG_TRANSCRIBE_WAV2VEC2}" 2>&1
 
-echo "Wav2Vec2 transcription complete. Log saved to ${LOG_TRANSCRIBE_WAV2VEC2}"
-echo ""
+    echo "Wav2Vec2 transcription complete. Log saved to ${LOG_TRANSCRIBE_WAV2VEC2}"
+    echo ""
+else
+    echo "----- [Step 6] Skipping Wav2Vec2 transcription -----"
+    echo ""
+fi
 
 
 # --- Step 7: Transcribe Speech using Faster Whisper ---
-echo "----- [Step 7] Transcribing speech using Faster Whisper -----"
-LOG_TRANSCRIBE_FASTER_WHISPER="${LOG_DIR}/transcribe_faster_whisper_large.log"
-OUTPUT_MANIFEST_FASTER_WHISPER="${DATASET_MANIFEST/.json/_faster_whisper_large.json}"
+if [ "$RUN_FASTER_WHISPER" = "true" ]; then
+    echo "----- [Step 7] Transcribing speech using Faster Whisper -----"
+    LOG_TRANSCRIBE_FASTER_WHISPER="${LOG_DIR}/transcribe_faster_whisper_large.log"
+    OUTPUT_MANIFEST_FASTER_WHISPER="${DATASET_MANIFEST/.json/_faster_whisper_large.json}"
 
-python -m scripts.asr.transcribe_speech_faster_whisper \
-    --model_path="${FASTER_WHISPER_MODEL}" \
-    --batch_size="${BATCH_SIZE}" \
-    --edge_len="${EDGE_LEN}" \
-    --device="${DEVICE}" \
-    --dataset_manifest="${DATASET_MANIFEST}" \
-    --dataset_manifest_transcribed="${OUTPUT_MANIFEST_FASTER_WHISPER}" > "${LOG_TRANSCRIBE_FASTER_WHISPER}" 2>&1
+    python -m scripts.asr.transcribe_speech_faster_whisper \
+        --model_path="${FASTER_WHISPER_MODEL}" \
+        --batch_size="${BATCH_SIZE}" \
+        --edge_len="${EDGE_LEN}" \
+        --device="${DEVICE}" \
+        --dataset_manifest="${DATASET_MANIFEST}" \
+        --dataset_manifest_transcribed="${OUTPUT_MANIFEST_FASTER_WHISPER}" > "${LOG_TRANSCRIBE_FASTER_WHISPER}" 2>&1
 
-echo "Faster Whisper transcription complete. Log saved to ${LOG_TRANSCRIBE_FASTER_WHISPER}"
-echo ""
+    echo "Faster Whisper transcription complete. Log saved to ${LOG_TRANSCRIBE_FASTER_WHISPER}"
+    echo ""
+else
+    echo "----- [Step 7] Skipping Faster Whisper transcription -----"
+    echo ""
+fi
+
+# --- Step 8: Transcribe Speech using Whisper ---
+if [ "$RUN_WHISPER" = "true" ]; then
+    echo "----- [Step 8] Transcribing speech using Whisper -----"
+    LOG_TRANSCRIBE_WHISPER="${LOG_DIR}/transcribe_whisper_large.log"
+    OUTPUT_MANIFEST_WHISPER="${DATASET_MANIFEST/.json/_whisper_large.json}"
+    WHISPER_MODEL=$(get_config '.models.whisper_large')
+
+    python -m scripts.asr.transcribe_speech_whisper \
+        --model_path="${WHISPER_MODEL}" \
+        --batch_size="${BATCH_SIZE}" \
+        --edge_len="${EDGE_LEN}" \
+        --device="${DEVICE}" \
+        --dataset_manifest="${DATASET_MANIFEST}" \
+        --dataset_manifest_transcribed="${OUTPUT_MANIFEST_WHISPER}" > "${LOG_TRANSCRIBE_WHISPER}" 2>&1
+
+    echo "Whisper transcription complete. Log saved to ${LOG_TRANSCRIBE_WHISPER}"
+    echo ""
+else
+    echo "----- [Step 8] Skipping Whisper transcription -----"
+    echo ""
+fi
 
 # --- Completion ---
-echo "ASR transcription steps 5, 6, and 7 are complete. ✅"
+echo "ASR transcription steps are complete. ✅"
