@@ -28,23 +28,50 @@ from nemo.collections.common.tokenizers.sentencepiece_tokenizer import SentenceP
 
 def get_partitions(
     t: int = 100000,
-    max_len_s: float = 1280.0,
+    max_len_s: float = 500.0,
     fs: int = 16000,
-    samples_to_frames_ratio=512,
-    overlap: int = 0,
+    samples_to_frames_ratio: int = 1280,
+    overlap: int = 10,
 ):
-    """Obtain partitions
+    """
+    Calculates partitions for a long audio file to be processed in chunks.
 
-    Note that this is implemented for frontends that discard trailing data.
+    This function divides a long audio signal of `t` samples into smaller,
+    overlapping partitions. This is useful for processing long audio files
+    with models that have a limited context window.
 
-    Note that the partitioning strongly depends on your architecture.
+    The partitioning is designed for models where the frontend discards trailing
+    data, and the exact partitioning scheme may depend on the model architecture.
 
-    A note on audio indices:
-        Based on the ratio of audio sample points to lpz indices (here called
-        frame), the start index of block N is:
-        0 + N * samples_to_frames_ratio
-        Due to the discarded trailing data, the end is then in the range of:
-        [N * samples_to_frames_ratio - 1 .. (1+N) * samples_to_frames_ratio] ???
+    Args:
+        t (int): Total number of samples in the audio file.
+        max_len_s (float): The maximum length of a single partition in seconds.
+            The actual cut length will be slightly smaller to allow for overlap.
+        fs (int): The sampling frequency of the audio in Hz.
+        samples_to_frames_ratio (int): The ratio of audio samples to model
+            output frames (e.g., log-probability matrix frames). This determines
+            how audio samples map to model outputs.
+        overlap (int): The number of overlapping frames between consecutive
+            partitions. This helps to ensure context is maintained across chunks.
+
+    Returns:
+        dict: A dictionary containing partitioning information:
+            - "partitions" (list): A list of tuples, where each tuple contains
+              the start and end sample indices for a partition. The last
+              partition may have `None` as the end index to signify processing
+              until the end of the audio.
+            - "overlap" (int): The overlap in frames.
+            - "delete_overlap_list" (list): A list of frame indices that
+              correspond to the overlapping regions and should be discarded
+              to avoid duplication.
+            - "samples_to_frames_ratio" (int): The provided samples to frames
+              ratio.
+            - "max_length" (int): The maximum length of a partition in samples,
+              adjusted to be a multiple of `samples_to_frames_ratio`.
+            - "cut_length" (int): The length of the non-overlapping part of a
+              partition in samples.
+            - "cut_time_s" (float): The length of the non-overlapping part of
+              a partition in seconds.
     """
     # max length should be ~ cut length + 25%
     cut_time_s = max_len_s / 1.25
