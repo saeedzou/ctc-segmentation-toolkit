@@ -1,8 +1,36 @@
 # CTC Segmentation Toolkit
 
-This tool provides a comprehensive pipeline for aligning long audio files with their corresponding transcripts to generate shorter, segmented audio clips suitable for training Automatic Speech Recognition (ASR) models. It is based on the CTC-Segmentation method, which leverages a pretrained ASR model to find optimal alignments.
+This tool provides a comprehensive pipeline for aligning long audio files with their corresponding transcripts to generate shorter, segmented audio clips suitable for training Automatic Speech Recognition (ASR) models. It is based on the [NeMo's dataset creation tool based on CTC-Segmentation](https://github.com/NVIDIA-NeMo/NeMo/tree/main/tools/ctc_segmentation), which leverages a pretrained CTC model to find optimal alignments. It also validates the alignment quality by comparing the alignments with the hypothesis from an ASR.
 
-More details on the original concept can be found in [this tutorial](https://github.com/NVIDIA/NeMo/blob/main/tutorials/tools/CTC_Segmentation_Tutorial.ipynb).
+I extend the toolkit by the following features:
+
+1. The NeMo toolkit cannot process audio files **longer** than a certain duration (depending on the model and hardware, typically around 10 minutes for a 24 GB GPU). This toolkit **allows for the processing of longer audio files** by splitting them into smaller chunks. For most CTC models the `samples_to_frames_ratio` is **1280** (verified for [nvidia/stt_en_fastconformer_hybrid_large_pc](https://huggingface.co/nvidia/stt_en_fastconformer_hybrid_large_pc), [nvidia/parakeet-tdt_ctc-110m](https://huggingface.co/nvidia/parakeet-tdt_ctc-110m), and [nvidia/stt_en_fastconformer_transducer_xlarge](https://huggingface.co/nvidia/stt_en_fastconformer_transducer_xlarge)), but you should adjust this value (or the `overlap`) if your model differs — it can be calculated from the model config using the snippet below.
+
+    ```python
+    # Get hop length from preprocessor
+    hop_length = model.preprocessor.featurizer.hop_length
+    sample_rate = model.preprocessor._cfg.sample_rate
+
+    # Get subsampling factor from encoder
+    subsampling = model.encoder._cfg.subsampling_factor
+
+    samples_to_frames_ratio = hop_length * subsampling
+    frame_shift_ms = samples_to_frames_ratio / sample_rate * 1000
+
+    print("hop_length:", hop_length)
+    print("subsampling:", subsampling)
+    print("samples_to_frames_ratio:", samples_to_frames_ratio)
+    print("frame shift (ms):", frame_shift_ms)
+    ```
+
+2. The original toolkit relies on punctuation for segmenting text into utterances, which limits its effectiveness on unpunctuated text sources like YouTube captions or subtitles. Such captions are often short, incomplete sentences, and segmenting them by default can result in abrupt utterances that contain fragments of adjacent sentences. To address this, this toolkit integrates the [Segment Any Text](https://arxiv.org/abs/2406.16678) model, which provides more robust text segmentation. This feature can be enabled by setting `split_using_sat` to `true` in `recipes/config.yaml`.
+
+3. During the preprocessing stage, an additional step is introduced to enhance data quality. The long audio files are first transcribed using a Nemo ASR model, which is selected for its high Real-Time Factor (RTFx), ensuring efficient processing. The Word Error Rate (WER) and Character Error Rate (CER) are then calculated by comparing the ASR-generated hypothesis with the provided transcript. If these error rates exceed the predefined thresholds (`min_wer` and `min_cer` in `recipes/config.yaml`), the corresponding audio-text pair is excluded from further processing steps. This filtering mechanism ensures that only high-quality, accurately transcribed data is used in the subsequent stages of the pipeline.
+
+4. While the original NeMo toolkit validates alignment quality using a single ASR model, this toolkit enhances the validation process by employing multiple ASRs with diverse architectures (including Whisper, NeMo, and wav2vec2). An utterance is only filtered out if it fails to meet the quality thresholds for *all* of the ASR models. This multi-ASR approach leads to a higher data retention rate compared to relying on a single ASR, as the varied strengths of different models ensure that more high-quality segments are correctly identified and retained.
+
+
+5. This toolkit is highly optimized for the Persian language, featuring a dedicated normalizer located in `preprocessing/normalizer/`. The normalizer's role is to convert text into its spoken form—expanding numbers, dates, and other numerical data—and to remove any out-of-vocabulary characters that are not supported by the NeMo ASR model. The Persian normalizer also includes a feature for transliterating English words and phrases into their Persian equivalents. For other languages, you will need to set the `lang_id` in the configuration file and either provide a custom normalizer or use one of the standard NeMo normalizers.
 
 ## Installation
 
