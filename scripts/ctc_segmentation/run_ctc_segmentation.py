@@ -19,8 +19,9 @@ import sys
 import time
 from pathlib import Path
 
+import librosa
 import numpy as np
-import scipy.io.wavfile as wav
+import soundfile as sf
 import torch
 from joblib import Parallel, delayed
 from tqdm import tqdm
@@ -86,7 +87,7 @@ if __name__ == "__main__":
     output_dir = Path(args.output_dir)
 
     if audio_path.is_dir() and text_path.is_dir():
-        audio_files = list(audio_path.glob("*.wav"))
+        audio_files = list(audio_path.glob("*.wav")) + list(audio_path.glob("*.mp3"))
         # text_files that have the same base name as audio files and exist
         text_files = {f.stem: f for f in text_path.glob("*.txt") if os.path.exists(f)}
         # keep only audio files that have corresponding transcript files
@@ -157,30 +158,24 @@ if __name__ == "__main__":
                 logging.info(f"No matching transcript found for {path_audio.name}. Skipping.")
                 continue
             segment_file = os.path.join(
-                segments_dir, f"{args.window_len}_" + path_audio.name.replace(".wav", "_segments.txt")
+                segments_dir, f"{args.window_len}_" + path_audio.name.replace(path_audio.suffix, "_segments.txt")
             )
             if not os.path.exists(transcript_file):
                 logging.info(f"{transcript_file} not found. Skipping {path_audio.name}")
                 continue
             try:
-                sample_rate, signal = wav.read(path_audio)
-                # Normalize and convert to float32
-                if signal.dtype == 'int16':
-                    signal = signal.astype('float32') / 32768.0
-                elif signal.dtype == 'int32':
-                    signal = signal.astype('float32') / 2147483648.0
-                elif signal.dtype == 'uint8':
-                    signal = (signal.astype('float32') - 128) / 128.0
-                else:
-                    # If already float32, ensure no further normalization is done
-                    signal = signal.astype('float32')
+                signal, sample_rate = librosa.load(path_audio, sr=None, mono=True)
                 if len(signal) == 0:
                     logging.error(f"Skipping {path_audio.name}")
                     continue
 
-                assert (
-                    sample_rate == args.sample_rate
-                ), f"Sampling rate of the audio file {path_audio} doesn't match --sample_rate={args.sample_rate}"
+                if sample_rate != args.sample_rate:
+                    logging.warning(
+                        f"Sampling rate of the audio file {path_audio} ({sample_rate} Hz) does not match "
+                        f"--sample_rate={args.sample_rate} Hz. Resampling will occur."
+                    )
+                    signal = librosa.resample(signal, orig_sr=sample_rate, target_sr=args.sample_rate)
+                    sample_rate = args.sample_rate
 
                 original_duration = len(signal) / sample_rate
                 logging.debug(f"len(signal): {len(signal)}, sr: {sample_rate}")

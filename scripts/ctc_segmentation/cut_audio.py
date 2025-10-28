@@ -17,10 +17,9 @@ import json
 import os
 from glob import glob
 
+import librosa
 import numpy as np
 import soundfile as sf
-from pydub import AudioSegment
-from scipy.io import wavfile
 from tqdm import tqdm
 
 parser = argparse.ArgumentParser(description="Cut audio on the segments based on segments")
@@ -90,7 +89,11 @@ def process_alignment(alignment_file: str, manifest: str, clips_dir: str, args):
             segments.append((float(line[0]) + args.offset / 1000, float(line[1]) + args.offset / 1000, float(line[2])))
 
     # cut the audio into segments and save the final manifests at output_dir
-    sampling_rate, signal = wavfile.read(audio_file)
+    signal, sampling_rate = librosa.load(audio_file, sr=None, mono=True)
+    if sampling_rate != args.sample_rate:
+        signal = librosa.resample(signal, orig_sr=sampling_rate, target_sr=args.sample_rate)
+        sampling_rate = args.sample_rate
+
     original_duration = len(signal) / sampling_rate
 
     num_samples = int(args.edge_duration * args.sample_rate)
@@ -109,17 +112,7 @@ def process_alignment(alignment_file: str, manifest: str, clips_dir: str, args):
                 if score >= args.threshold:
                     high_score_dur += duration
                     audio_filepath = os.path.join(clips_dir, f"{base_name}_{i:04}.{args.output_format}")
-                    if args.output_format == "wav":
-                        wavfile.write(audio_filepath, sampling_rate, segment)
-                    elif args.output_format == "mp3":
-                        audio = AudioSegment(
-                            segment.tobytes(),
-                            frame_rate=sampling_rate,
-                            sample_width=segment.dtype.itemsize,
-                            channels=1  # or 2 if stereo
-                        )
-                        audio.export(audio_filepath, format="mp3", bitrate="192k")
-                        # sf.write(audio_filepath, segment, samplerate=sampling_rate, format="MP3")
+                    sf.write(audio_filepath, segment, samplerate=sampling_rate, format=args.output_format.upper())
 
                     assert len(signal.shape) == 1 and sampling_rate == args.sample_rate, "check sampling rate"
 
