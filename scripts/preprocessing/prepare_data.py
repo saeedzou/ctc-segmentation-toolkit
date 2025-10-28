@@ -324,10 +324,6 @@ def split_text(
         transcript = re.sub(r'^\s*\+\s*\w+\s*:', '', transcript, flags=re.MULTILINE)
         transcript = re.sub(r'^\s*\+[\u0600-\u06FF]+(?:\s*):', '', transcript, flags=re.MULTILINE)
     
-    if sat is not None:
-        transcript = transcript.replace("\n", " ")
-        transcript = "\n".join(sat.split(transcript))
-
     lower_case_unicode = ''
     upper_case_unicode = ''
     if language == "ru":
@@ -482,14 +478,30 @@ def split_text(
                 new_sentences.append(sentence)
         sentences = [s.strip() for s in new_sentences if s.strip()]
 
-    # when no punctuation marks present in the input text, split based on max_length
-    if len(sentences) == 1:
-        sent = sentences[0].split()
-        sentences = []
-        for i in range(0, len(sent), max_length):
-            sentences.append(" ".join(sent[i : i + max_length]))
-    sentences = [s.strip() for s in sentences if s.strip()]
+    processed_sentences = []
+    for sentence in sentences:
+        if len(sentence.split()) > max_length:
+            current_sub_sentences = [sentence]
+            if sat is not None:
+                sat_split_result = sat.split(sentence)
+                # Check if SAT actually split it or made it shorter
+                if len(sat_split_result) > 1 or (len(sat_split_result) == 1 and len(sat_split_result[0].split()) < len(sentence.split())):
+                    current_sub_sentences = sat_split_result
 
+            final_chunks_for_sentence = []
+            for sub_sent in current_sub_sentences:
+                if len(sub_sent.split()) > max_length:
+                    # Apply max_length word split
+                    words = sub_sent.split()
+                    for i in range(0, len(words), max_length):
+                        final_chunks_for_sentence.append(" ".join(words[i : i + max_length]))
+                else:
+                    final_chunks_for_sentence.append(sub_sent)
+            processed_sentences.extend([s.strip() for s in final_chunks_for_sentence if s.strip()])
+        else:
+            processed_sentences.append(sentence.strip())
+
+    sentences = [s for s in processed_sentences if s] # Filter out any empty strings
     # save split text with original punctuation and case
     if language == "fa":
         if not PARSNORM_AVAILABLE:
