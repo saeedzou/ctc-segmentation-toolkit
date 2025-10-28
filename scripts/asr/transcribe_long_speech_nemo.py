@@ -81,12 +81,12 @@ def main():
     os.makedirs(args.transcript_dir, exist_ok=True)
     model = load_model(args.model_path, device)
 
-    wav_files = [f for f in os.listdir(args.audio_dir) if f.lower().endswith('.wav')]
-    if not wav_files:
-        print(f"No .wav files found in {args.audio_dir}.")
+    audio_files = [f for f in os.listdir(args.audio_dir) if f.lower().endswith(('.wav', '.mp3'))]
+    if not audio_files:
+        print(f"No .wav or .mp3 files found in {args.audio_dir}.")
         return
 
-    for filename in wav_files:
+    for filename in audio_files:
         audio_path = os.path.join(args.audio_dir, filename)
         transcript_path = os.path.join(args.transcript_dir, os.path.splitext(filename)[0] + '.txt')
         print(f"Transcribing {filename}...")
