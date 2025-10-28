@@ -70,7 +70,7 @@ parser.add_argument(
     "--model", type=str, default="QuartzNet15x5Base-En", help="Pre-trained model name or path to model checkpoint"
 )
 parser.add_argument(
-    "--max_length", type=int, default=40, help="Max number of words of the text segment for alignment."
+    "--max_length", type=int, default=60, help="Max number of words of the text segment for alignment."
 )
 parser.add_argument(
     "--additional_split_symbols",
@@ -231,7 +231,7 @@ def split_text(
     remove_number_in_guillumets: bool = False,
     remove_speaker_labels: bool = False,
     do_lower_case: bool = True,
-    max_length: bool = 100,
+    max_length: bool = 60,
     additional_split_symbols: str = None,
     split_using_pattern: bool = True,
     split_on_quotes: bool = False,
