@@ -515,7 +515,7 @@ def split_text(
             sentence = normalizer.normalize(sentence,
                                             repeated_punctuation_removal=True,
                                             symbol_pronounciation=True,
-                                            en_fa_transliteration=True,
+                                            en_fa_transliteration=False,
                                             arabic_correction=True, 
                                             special_chars_removal=True, 
                                             number_correction=True, 
@@ -589,7 +589,7 @@ def split_text(
                                           english_correction=False,
                                           repeated_punctuation_removal=False,
                                           symbol_pronounciation=False,
-                                          en_fa_transliteration=False,
+                                          en_fa_transliteration=True,
                                           arabic_correction=False, 
                                           special_chars_removal=False, 
                                           number_correction=False)
