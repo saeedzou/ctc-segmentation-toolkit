@@ -38,6 +38,9 @@ def transcribe_audio(model, dataset_manifest, dataset_manifest_transcribed, edge
 
     # Filter out already processed entries
     filepaths_to_process = [entry for entry in all_filepaths if entry['audio_filepath'] not in already_transcribed]
+    # Sort by audio duration (ascending) for efficient batching
+    filepaths_to_process.sort(key=lambda x: x.get("duration", 999999))
+
 
     if not filepaths_to_process:
         logging.info("All files already transcribed.")
